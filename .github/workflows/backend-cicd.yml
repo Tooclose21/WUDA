@@ -39,7 +39,9 @@ jobs:
 
       - name: Run linting
         working-directory: ./back-end
-        run: flake8 .
+        # ignoring line length error, due to included sql statements in
+        # databse.py
+        run: flake8 --ignore E501 .
 
       - name: Run tests
         working-directory: ./back-end

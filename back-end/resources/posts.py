@@ -4,7 +4,8 @@ import models
 from datetime import date
 from marshmallow import ValidationError
 from sqlalchemy.orm import joinedload
-from resources.schemas import *
+from resources.schemas import details_schema, post_list_schema, post_add_schema, \
+    comment_add_schema, comment_schema
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from logger import LOGGER
 
@@ -23,13 +24,15 @@ class PostDetails(Resource):
         else:
             return {"message": "Not found"}, 400
 
+
 class PostList(Resource):
     def get(self):
         session = SessionLocal()
         posts = session.query(models.Post).options(
-                joinedload(models.Post.author),
-    joinedload(models.Post.game),
-    joinedload(models.Post.comments).joinedload(models.Comment.author)).all()
+            joinedload(models.Post.author),
+            joinedload(models.Post.game),
+            joinedload(models.Post.comments).joinedload(
+                models.Comment.author)).all()
         session.close()
         return post_list_schema.dump(posts), 200
 
@@ -60,6 +63,7 @@ class PostList(Resource):
 
         return return_data, 201
 
+
 class PostComments(Resource):
     @jwt_required()
     def post(self, post_id: int):
@@ -73,7 +77,8 @@ class PostComments(Resource):
             return {"message": "Wrong request"}, 400
         LOGGER.info("Adding new post post")
         session = SessionLocal()
-        post = session.query(models.Post).filter(models.Post.id == post_id).first()
+        post = session.query(models.Post).filter(
+            models.Post.id == post_id).first()
         if not post:
             session.close()
             return {"message": "Post not found"}, 404
@@ -89,6 +94,7 @@ class PostComments(Resource):
         session.refresh(new_comment)
         return_data = comment_schema.dump(new_comment)
         session.close()
-        post = session.query(models.Post).filter(models.Post.id == post_id).first()
+        post = session.query(models.Post).filter(
+            models.Post.id == post_id).first()
 
         return return_data, 201

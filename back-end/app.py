@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_restful import Api, Resource
 from database import init_db, check_database
-from resources.posts import *
-from resources.auth import *
-from resources.game import *
+from resources.posts import PostList, PostDetails, PostComments
+from resources.auth import RegisterUser, LoginUser
+from resources.game import GameList
 from settings import JWT_KEY, APP_PORT, APP_HOST
 from flask_jwt_extended import JWTManager
 

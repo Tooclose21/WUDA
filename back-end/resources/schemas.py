@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields
 from datetime import datetime
 
+
 class GameSchema(Schema):
     id = fields.Int()
     title = fields.Str(required=True)
@@ -11,16 +12,19 @@ class GameSchema(Schema):
     image_url = fields.Str()
 
 
-
 class UserSchema(Schema):
     id = fields.Int()
     username = fields.Str()
 
+
 class GameSchemaListSingle(Schema):
     id = fields.Int()
     title = fields.Str()
+
+
 class CommentAddSchema(Schema):
     content = fields.Str(required=True)
+
 
 class CommentSchema(Schema):
     id = fields.Int()
@@ -33,7 +37,9 @@ class CommentSchema(Schema):
 
     def get_created_at(self, obj):
         # serializacja do isoformat jak w przykładzie frontendowym
-        return datetime.combine(obj.created_at, datetime.min.time()).isoformat()
+        return datetime.combine(obj.created_at,
+                                datetime.min.time()).isoformat()
+
 
 class PostDetailsSchema(Schema):
     id = fields.Int()
@@ -46,7 +52,8 @@ class PostDetailsSchema(Schema):
 
     def get_created_at(self, obj):
         # serializacja do isoformat jak w przykładzie frontendowym
-        return datetime.combine(obj.created_at, datetime.min.time()).isoformat()
+        return datetime.combine(obj.created_at,
+                                datetime.min.time()).isoformat()
 
 
 class PostListSchema(Schema):
@@ -57,7 +64,8 @@ class PostListSchema(Schema):
     body = fields.Str()
 
     def get_created_at(self, obj):
-        return datetime.combine(obj.created_at, datetime.min.time()).isoformat()
+        return datetime.combine(obj.created_at,
+                                datetime.min.time()).isoformat()
 
 
 class PostAddSchema(Schema):
@@ -70,11 +78,14 @@ class LoginUserSchema(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True)
 
+
 class RegisterUser(LoginUserSchema):
     email = fields.Email(required=True)
 
+
 class CheckUser(Schema):
     username = fields.Str(required=True)
+
 
 game_schema = GameSchema()
 games_schema = GameSchema(many=True)
