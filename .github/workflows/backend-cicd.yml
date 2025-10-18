@@ -1,0 +1,55 @@
+name: Automated backend check and build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  backend-cicd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest flake8
+
+      - name: Run vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './back-end'
+          ignore-unfixed: true
+          severity: 'HIGH,CRITICAL'
+          exit-code: 1
+
+      - name: Run linting
+        working-directory: ./back-end
+        run: flake8 .
+
+      - name: Run tests
+        working-directory: ./back-end
+        run: pytest tests
+
+#      - name: Build Docker image
+#        run: docker build -t ghcr.io/${{ github.repository_owner }}/backend:latest ./back-end
+#
+#      - name: Log in to GitHub Container Registry
+#        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+#
+#      - name: Push Docker image
+#        run: docker push ghcr.io/${{ github.repository_owner }}/backend:latest
