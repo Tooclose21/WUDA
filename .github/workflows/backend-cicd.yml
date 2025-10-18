@@ -82,5 +82,5 @@ jobs:
           context: ./back-end
           push: true
           tags: |
-            ghcr.io/${{ env.owner_lc }}/${{ env.repo_lc }}-backend:latest
-            ghcr.io/${{ env.owner_lc }}/${{ env.repo_lc }}-backend:${{ github.sha }}
+            ghcr.io/${{ env.owner_lc }}/wuda-backend:latest
+            ghcr.io/${{ env.owner_lc }}/wuda-backend:${{ github.sha }}
