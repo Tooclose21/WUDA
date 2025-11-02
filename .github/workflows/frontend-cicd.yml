@@ -1,5 +1,3 @@
-# https://docs.github.com/en/actions/tutorials/build-and-test-code/python
-
 name: Frontend CI/CD
 
 on:
@@ -19,12 +17,12 @@ permissions:
   contents: read
   packages: write
 
-env:
-  IMAGE_NAME: wuda-frontend
-
 jobs:
   frontend-cicd:
     runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: wuda-frontend
 
     steps:
       - name: Checkout
@@ -57,8 +55,12 @@ jobs:
         working-directory: ./front-end
         run: pip-audit -r requirements.txt
 
-      - name: Log in to GHCR (via secrets)
-        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compute lowercase GHCR owner
         run: echo "OWNER_LOWER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
@@ -67,11 +69,11 @@ jobs:
         run: |
           docker build \
             -f front-end/Dockerfile \
-            -t ghcr.io/$OWNER_LOWER/${{ env.IMAGE_NAME }}:latest \
-            -t ghcr.io/$OWNER_LOWER/${{ env.IMAGE_NAME }}:${GITHUB_SHA} \
+            -t ghcr.io/${{ env.OWNER_LOWER }}/${{ env.IMAGE_NAME }}:latest \
+            -t ghcr.io/${{ env.OWNER_LOWER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             ./front-end
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/$OWNER_LOWER/${{ env.IMAGE_NAME }}:latest
-          docker push ghcr.io/$OWNER_LOWER/${{ env.IMAGE_NAME }}:${GITHUB_SHA}
+          docker push ghcr.io/${{ env.OWNER_LOWER }}/${{ env.IMAGE_NAME }}:latest
+          docker push ghcr.io/${{ env.OWNER_LOWER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
