@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wuda.fullname" . }}-frontend
+  labels:
+    app: {{ include "wuda.fullname" . }}-frontend
+spec:
+  replicas: {{ .Values.replicaCount.frontend }}
+  selector:
+    matchLabels:
+      app: {{ include "wuda.fullname" . }}-frontend
+  template:
+    metadata:
+      labels:
+        app: {{ include "wuda.fullname" . }}-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.image.frontend.repository }}:{{ .Values.image.frontend.tag }}"
+          imagePullPolicy: {{ .Values.image.frontend.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.frontend.port }}
+          env:
+            - name: APP_HOST
+              value: "0.0.0.0"
+            - name: APP_PORT
+              value: "{{ .Values.service.frontend.port }}"
+            - name: BACKEND_HOSTNAME
+              value: "{{ include "wuda.fullname" . }}-backend"
+            - name: BACKEND_PORT
+              value: "{{ .Values.service.backend.port }}"
+            {{- if .Values.secrets.frontend.SECRET_KEY }}
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "wuda.fullname" . }}-secrets
+                  key: secret_key
+            {{- end }}
+

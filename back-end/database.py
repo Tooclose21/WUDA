@@ -24,9 +24,9 @@ def init_db():
 def check_database():
     try:
         session = SessionLocal()
-        session.execute("SELECT 1")
+        session.execute(text("SELECT 1"))
         return True
-    except Exception:
+    except Exception as e:
         return False
 
 

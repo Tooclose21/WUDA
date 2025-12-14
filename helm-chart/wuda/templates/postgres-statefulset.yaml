@@ -1,0 +1,66 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wuda.fullname" . }}-postgres
+  labels:
+    app: {{ include "wuda.fullname" . }}-postgres
+spec:
+  clusterIP: None
+  ports:
+    - port: {{ .Values.service.postgres.port }}
+      targetPort: {{ .Values.service.postgres.port }}
+      protocol: TCP
+      name: tcp
+  selector:
+    app: {{ include "wuda.fullname" . }}-postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "wuda.fullname" . }}-postgres
+  labels:
+    app: {{ include "wuda.fullname" . }}-postgres
+spec:
+  serviceName: {{ include "wuda.fullname" . }}-postgres
+  replicas: {{ .Values.replicaCount.postgres }}
+  selector:
+    matchLabels:
+      app: {{ include "wuda.fullname" . }}-postgres
+  template:
+    metadata:
+      labels:
+        app: {{ include "wuda.fullname" . }}-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.image.postgres.repository }}:{{ .Values.image.postgres.tag }}"
+          imagePullPolicy: {{ .Values.image.postgres.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.postgres.port }}
+          env:
+            - name: POSTGRES_USER
+              value: "board_games"
+            - name: POSTGRES_PASSWORD
+              value: "alamakota"
+            - name: POSTGRES_DB
+              value: "games"
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+        labels:
+          app: {{ include "wuda.fullname" . }}-postgres
+      spec:
+        accessModes:
+          - {{ .Values.postgres.persistence.accessMode }}
+        resources:
+          requests:
+            storage: {{ .Values.postgres.persistence.size | quote }}
+        {{- if .Values.postgres.persistence.storageClass }}
+        storageClassName: "{{ .Values.postgres.persistence.storageClass }}"
+        {{- end }}
+{{- end }}
+
