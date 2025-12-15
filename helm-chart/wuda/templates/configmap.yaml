@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "wuda.fullname" . }}-config
+data:
+  BACKEND_HOSTNAME: "{{ .Values.config.frontend.BACKEND_HOSTNAME }}"
+  BACKEND_PORT: "{{ .Values.config.frontend.BACKEND_PORT }}"
+

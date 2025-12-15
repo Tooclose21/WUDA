@@ -1,9 +1,75 @@
+version: '3.8'
 services:
   postgres:
-    image: postgres
+    image: "postgres:15"
     environment:
       POSTGRES_PASSWORD: alamakota
       POSTGRES_USER: board_games
       POSTGRES_DB: games
     ports:
-      - 5432:5432
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U board_games -d games || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  back-end:
+    build:
+      context: ./back-end
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 5000
+      JWT_KEY: dev-jwt-key
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: board_games
+      POSTGRES_PASSWORD: alamakota
+      POSTGRES_DB: games
+      PORT: 5432
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/readiness || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+  front-end:
+    build:
+      context: ./front-end
+      dockerfile: Dockerfile
+    depends_on:
+      - back-end
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      SECRET_KEY: dev-secret-key
+      BACKEND_HOSTNAME: back-end
+      BACKEND_PORT: 5000
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge

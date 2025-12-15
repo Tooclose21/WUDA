@@ -1,0 +1,85 @@
+replicaCount:
+  backend: 1
+  frontend: 1
+  postgres: 1
+
+image:
+  backend:
+    repository: wuda/backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  frontend:
+    repository: wuda/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  postgres:
+    repository: postgres
+    tag: "15"
+    pullPolicy: IfNotPresent
+
+service:
+  backend:
+    port: 5000
+    type: ClusterIP
+  frontend:
+    type: NodePort
+    port: 8000
+    nodePort: 30080
+  postgres:
+    port: 5432
+    type: ClusterIP
+
+postgres:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 1Gi
+    accessMode: ReadWriteOnce
+    storageClass: ""
+
+resources: {}
+
+readinessProbe:
+  backend:
+    httpGet:
+      path: /readiness
+      port: 5000
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 10
+
+livenessProbe:
+  backend:
+    httpGet:
+      path: /liveness
+      port: 5000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+ingress:
+  enabled: true
+  annotations: {}
+
+env:
+  backend: {}
+  frontend: {}
+
+config:
+  frontend:
+    BACKEND_HOSTNAME: "wuda-wuda-backend"
+    BACKEND_PORT: 5000
+
+secrets:
+  backend:
+    JWT_KEY: "dev-jwt-key"
+  frontend:
+    SECRET_KEY: "dev-secret-key"
+
+backend:
+  waitForPostgres:
+    enabled: true
+    retries: 20
+    sleep: 3

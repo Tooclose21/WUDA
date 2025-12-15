@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wuda.fullname" . }}-backend
+  labels:
+    app: {{ include "wuda.fullname" . }}-backend
+spec:
+  replicas: {{ .Values.replicaCount.backend }}
+  selector:
+    matchLabels:
+      app: {{ include "wuda.fullname" . }}-backend
+  template:
+    metadata:
+      labels:
+        app: {{ include "wuda.fullname" . }}-backend
+    spec:
+{{- if .Values.backend.waitForPostgres.enabled }}
+      initContainers:
+        - name: wait-for-postgres
+          image: "{{ .Values.image.postgres.repository }}:{{ .Values.image.postgres.tag }}"
+          imagePullPolicy: {{ .Values.image.postgres.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              echo "Waiting for postgres at ${POSTGRES_HOST:-{{ include "wuda.fullname" . }}-postgres}:${POSTGRES_PORT:-{{ .Values.service.postgres.port }}}"
+              for i in $(seq 1 {{ .Values.backend.waitForPostgres.retries }}); do
+                pg_isready -h "${POSTGRES_HOST:-{{ include "wuda.fullname" . }}-postgres}" -p "${POSTGRES_PORT:-{{ .Values.service.postgres.port }}}" && exit 0 || true
+                echo "postgres not ready yet ($i/{{ .Values.backend.waitForPostgres.retries }}), sleeping {{ .Values.backend.waitForPostgres.sleep }}s"
+                sleep {{ .Values.backend.waitForPostgres.sleep }}
+              done
+              echo "postgres did not become ready after {{ .Values.backend.waitForPostgres.retries }} attempts" >&2
+              exit 1
+          env:
+            - name: POSTGRES_HOST
+              value: "{{ include "wuda.fullname" . }}-postgres"
+            - name: POSTGRES_PORT
+              value: "{{ .Values.service.postgres.port }}"
+{{- end }}
+      containers:
+        - name: backend
+          image: "{{ .Values.image.backend.repository }}:{{ .Values.image.backend.tag }}"
+          imagePullPolicy: {{ .Values.image.backend.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.backend.port }}
+          env:
+            - name: APP_HOST
+              value: "0.0.0.0"
+            - name: APP_PORT
+              value: "{{ .Values.service.backend.port }}"
+            {{- if .Values.secrets.backend.JWT_KEY }}
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "wuda.fullname" . }}-secrets
+                  key: jwt_key
+            {{- end }}
+            {{- if .Values.postgres.enabled }}
+            - name: POSTGRES_HOST
+              value: "{{ include "wuda.fullname" . }}-postgres"
+            - name: POSTGRES_USER
+              value: "board_games"
+            - name: POSTGRES_PASSWORD
+              value: "alamakota"
+            - name: POSTGRES_DB
+              value: "games"
+            - name: PORT
+              value: "{{ .Values.service.postgres.port }}"
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: "{{ .Values.readinessProbe.backend.httpGet.path }}"
+              port: {{ .Values.readinessProbe.backend.httpGet.port }}
+            initialDelaySeconds: {{ .Values.readinessProbe.backend.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.backend.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.backend.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.backend.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: "{{ .Values.livenessProbe.backend.httpGet.path }}"
+              port: {{ .Values.livenessProbe.backend.httpGet.port }}
+            initialDelaySeconds: {{ .Values.livenessProbe.backend.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.backend.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.backend.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.backend.failureThreshold }}
+
