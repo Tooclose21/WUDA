@@ -30,7 +30,6 @@ def check_database():
         return False
 
 
-
 def load_data():
     session = SessionLocal()
     if session.query(Game).count() == 0:
