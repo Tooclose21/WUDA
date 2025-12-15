@@ -27,7 +27,7 @@ def check_database():
         session.execute(text("SELECT 1"))
         return True
     except Exception as e:
-        return False
+        logger.exception("Database error")
 
 
 def load_data():

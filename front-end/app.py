@@ -1,9 +1,21 @@
-from flask import (Flask, render_template, request, redirect,
-                   url_for, flash, session)
-from utils.api_calls import (fetch_post, NewComment, fetch_posts,
-                             NewPost, add_post, add_comment, Login,
-                             login_user, register_user, RegisterUser,
-                             add_game_req, get_games_req)
+from flask import (Flask, 
+                    render_template, 
+                    request, redirect,
+                    url_for, 
+                    flash, 
+                    session)
+from utils.api_calls import (fetch_post, 
+                             NewComment, 
+                             fetch_posts,
+                             NewPost, 
+                             add_post, 
+                             add_comment, 
+                             Login,
+                             login_user, 
+                             register_user, 
+                             RegisterUser,
+                             add_game_req, 
+                             get_games_req)
 from pydantic import ValidationError
 from settings import SECRET_KEY, APP_PORT, APP_HOST
 import logging
@@ -34,7 +46,8 @@ def readiness():
     port = os.getenv("BACKEND_PORT", "5000")
 
     if not host:
-        # Jeśli nie ustawiono backend hosta - frontend działa, ale nie jest gotowy do pracy „z backendem”
+        # Jeśli nie ustawiono backend hosta - frontend działa, 
+        # ale nie jest gotowy do pracy „z backendem”
         return {"status": "I am not ready (no BACKEND_HOSTNAME)"}, 503
 
     url = f"http://{host}:{port}/liveness"
@@ -47,7 +60,8 @@ def readiness():
 
     return {"status": "I am not ready (backend unreachable)"}, 503
 
-# wtedy k8s sam poczeka, aż backend faktycznie odpowiada, zanim uzna frontend za “Ready”
+# wtedy k8s sam poczeka, aż backend faktycznie odpowiada, 
+# zanim uzna frontend za “Ready”
 
 
 @app.context_processor
