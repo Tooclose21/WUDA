@@ -22,8 +22,9 @@ service:
     port: 5000
     type: ClusterIP
   frontend:
+    type: NodePort
     port: 8000
-    type: ClusterIP
+    nodePort: 30080
   postgres:
     port: 5432
     type: ClusterIP
@@ -43,10 +44,10 @@ readinessProbe:
     httpGet:
       path: /readiness
       port: 5000
-    initialDelaySeconds: 5
+    initialDelaySeconds: 15
     periodSeconds: 10
-    timeoutSeconds: 3
-    failureThreshold: 3
+    timeoutSeconds: 5
+    failureThreshold: 10
 
 livenessProbe:
   backend:
@@ -68,7 +69,7 @@ env:
 
 config:
   frontend:
-    BACKEND_HOSTNAME: "{{ .Release.Name }}-backend"
+    BACKEND_HOSTNAME: "wuda-wuda-backend"
     BACKEND_PORT: 5000
 
 secrets:

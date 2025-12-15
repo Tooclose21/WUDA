@@ -26,9 +26,9 @@ spec:
             - name: APP_PORT
               value: "{{ .Values.service.frontend.port }}"
             - name: BACKEND_HOSTNAME
-              value: "{{ include "wuda.fullname" . }}-backend"
+              value: "{{ .Values.config.frontend.BACKEND_HOSTNAME }}"
             - name: BACKEND_PORT
-              value: "{{ .Values.service.backend.port }}"
+              value: "{{ .Values.config.frontend.BACKEND_PORT }}"
             {{- if .Values.secrets.frontend.SECRET_KEY }}
             - name: SECRET_KEY
               valueFrom:
@@ -36,4 +36,22 @@ spec:
                   name: {{ include "wuda.fullname" . }}-secrets
                   key: secret_key
             {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: {{ .Values.service.frontend.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: {{ .Values.service.frontend.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+
 

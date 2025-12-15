@@ -7,10 +7,11 @@ metadata:
 spec:
   type: {{ .Values.service.frontend.type }}
   ports:
-    - port: {{ .Values.service.frontend.port }}
+    - name: http
+      port: {{ .Values.service.frontend.port }}
       targetPort: {{ .Values.service.frontend.port }}
-      protocol: TCP
-      name: http
+      {{- if eq .Values.service.frontend.type "NodePort" }}
+      nodePort: {{ .Values.service.frontend.nodePort }}
+      {{- end }}
   selector:
     app: {{ include "wuda.fullname" . }}-frontend
-
